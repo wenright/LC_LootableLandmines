@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using LootableLandmines.Behavoiurs;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace LootableLandmines.Patches;
@@ -7,16 +8,20 @@ namespace LootableLandmines.Patches;
 [HarmonyPatch(typeof(Landmine))]
 public class LandminePatch
 {
+    private const bool SKIP = false;
+    private const bool DONT_SKIP = true;
+    
     [HarmonyPatch(typeof(Landmine), "Start")]
     [HarmonyPostfix]
     static void Start(Landmine __instance)
     {
         if (__instance == null) return;
+        if (!NetworkManager.Singleton.IsServer) return;
 
         // Destroy existing landmines, since they aren't pickupable
         if (__instance.GetComponentInParent<CustomMine>() == null)
         {
-            Object.Destroy(__instance.gameObject);
+            NetworkManager.Destroy(__instance.gameObject);
         }
     }
 
@@ -25,8 +30,30 @@ public class LandminePatch
     [HarmonyPrefix]
     static bool PreTriggerExit(Collider other, Landmine __instance)
     {
-        // Skip collisions with self and other landmines
-        return other.GetComponent<CustomMine>() == null;
+        if (__instance == null) return DONT_SKIP;
+        
+        // Skip collisions if falling or held by a player
+        CustomMine customMine = __instance.GetComponentInParent<CustomMine>();
+        if (customMine != null)
+        {
+            if (!customMine.hasHitGround)
+            {
+                return SKIP;
+            }
+            if (customMine.playerHeldBy != null)
+            {
+                return SKIP;
+            }
+        }
+        
+        // Skip collisions if held, and collision with itself or other mines
+        CustomMine otherMine = other.GetComponent<CustomMine>();
+        if (otherMine != null)
+        {
+            return SKIP;
+        }
+
+        return DONT_SKIP;
     }
 
     [HarmonyPatch(typeof(Landmine), "OnTriggerEnter")]
@@ -42,18 +69,30 @@ public class LandminePatch
         }
     }
 
-    [HarmonyPatch(typeof(Landmine), "OnTriggerExit")]
+    [HarmonyPatch(typeof(Landmine), "Detonate")]
     [HarmonyPostfix]
-    public static void PostDetonate(Collider other, Landmine __instance)
+    public static void PostDetonate(Landmine __instance)
     {
+        if (__instance == null) return;
+        if (!NetworkManager.Singleton.IsServer) return;
         
-    }
+        Debug.Log(Time.time + " - LANDMINE detonating");
 
+        // Clean up destroyed mines
+        var customMine = __instance.GetComponentInParent<CustomMine>();
+        if (customMine != null)
+        {
+            customMine.DestroyObjectInHand(customMine.playerHeldBy);
+            
+            // Give a little time for the audio to play
+            NetworkManager.Destroy(__instance.transform.parent.gameObject, 1.0f);
+        }
+    }
+    
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(Landmine), "TriggerMineOnLocalClientByExiting")]
-    public static void Detonate(Landmine instance)
+    public static void TriggerMineOnLocalClientByExiting(Landmine instance)
     {
         Debug.Log("Reverse Patching Landmine -> TriggerMineOnLocalClientByExiting");
-        
     }
 }

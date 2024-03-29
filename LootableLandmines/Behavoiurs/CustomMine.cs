@@ -18,50 +18,29 @@ internal class CustomMine : PhysicsProp
     {
         base.ItemActivate(used, buttonDown);
 
-        DestroyObjectInHand(playerHeldBy);
-        LandminePatch.Detonate(_landmine);
+        LandminePatch.TriggerMineOnLocalClientByExiting(_landmine);
     }
 
-    public override void EquipItem()
+    public override void OnHitGround()
     {
-        base.EquipItem();
-
-        // TODO unsure if both calls are needed, but worried delay will cause non-server players to still trigger mine
-        _landmine.ToggleMineServerRpc(false);
-        _landmine.ToggleMineEnabledLocalClient(false);
-    }
-
-    public override void GrabItemFromEnemy(EnemyAI enemyAI)
-    {
-        base.GrabItemFromEnemy(enemyAI);
-
-        _landmine.ToggleMineServerRpc(false);
-        _landmine.ToggleMineEnabledLocalClient(false);
-    }
-
-    public override void DiscardItem()
-    {
-        base.DiscardItem();
-        
         Invoke(nameof(DelayedEnable), armDelay);
-        
-        // TODO collision with ship on takeoff
-        // if (!isInShipRoom)
-        // {
-        //     Invoke(nameof(DelayedEnable), armDelay);
-        // }
+    }
+    
+    // The default GrabItem gets called with a 0.1s delay :(
+    public void EarlyGrabItem()
+    {
+        Disable();
     }
 
-    public override void DiscardItemFromEnemy()
+    public void Disable()
     {
-        base.DiscardItem();
-        
-        Invoke(nameof(DelayedEnable), armDelay);
+        _landmine.ToggleMineEnabledLocalClient(false);
+        // _landmine.ToggleMine(false);
     }
 
     private void DelayedEnable()
     {
-        _landmine.ToggleMineServerRpc(true);
         _landmine.ToggleMineEnabledLocalClient(true);
+        // _landmine.ToggleMine(true);
     }
 }
