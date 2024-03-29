@@ -1,4 +1,4 @@
-﻿using LootableLandmines.Patches
+﻿using LootableLandmines.Patches;
 
 namespace LootableLandmines.Behavoiurs;
 
