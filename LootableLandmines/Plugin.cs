@@ -19,9 +19,9 @@ namespace LootableLandmines
 
         const string GUID = "procyon.lootablelandmines";
         const string NAME = "Lootable Landmines";
-        const string VERSION = "1.0.0";
+        const string VERSION = "1.1.0";
 
-        private const int minMines = 7; // TODO 1
+        private const int minMines = 1;
         private const int maxMines = 7;
 
         private readonly Harmony harmony = new Harmony(GUID);
@@ -60,7 +60,8 @@ namespace LootableLandmines
             };
             MapObjects.RegisterMapObject(mineMapObj, Levels.LevelTypes.All, _ => curve);
 
-            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), GUID);
+            harmony.PatchAll(typeof(LandminePatch));
+            harmony.PatchAll(typeof(PlayerControllerBPatch));
 
             Logger.LogInfo($"Plugin {GUID} is loaded!");
         }
