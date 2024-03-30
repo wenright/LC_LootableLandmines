@@ -1,4 +1,5 @@
 ﻿using LootableLandmines.Patches;
+using Unity.Netcode;
 
 namespace LootableLandmines.Behavoiurs;
 
@@ -29,18 +30,25 @@ internal class CustomMine : PhysicsProp
     // The default GrabItem gets called with a 0.1s delay :(
     public void EarlyGrabItem()
     {
-        Disable();
-    }
-
-    public void Disable()
-    {
         _landmine.ToggleMineEnabledLocalClient(false);
-        // _landmine.ToggleMine(false);
     }
 
     private void DelayedEnable()
     {
         _landmine.ToggleMineEnabledLocalClient(true);
-        // _landmine.ToggleMine(true);
+    }
+
+    public void Cleanup()
+    {
+        Invoke(nameof(DelayedCleanup), 1.0f);
+    }
+
+    private void DelayedCleanup()
+    {
+        var networkObject = GetComponent<NetworkObject>();
+        if (networkObject != null)
+        {
+            networkObject.Despawn();
+        }
     }
 }
