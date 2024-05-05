@@ -7,7 +7,7 @@ namespace LootableLandmines.Behavoiurs;
 internal class CustomMine : PhysicsProp
 {
     private Landmine _landmine;
-    private const float armDelay = 0.75f;
+    private const float armDelay = 1.75f;
     
     public override void Start()
     {

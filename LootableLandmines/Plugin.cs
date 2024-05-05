@@ -20,7 +20,7 @@ namespace LootableLandmines
 
         public const string GUID = "procyon.lootablelandmines";
         public const string NAME = "Lootable Landmines";
-        public const string VERSION = "1.3.0";
+        public const string VERSION = "1.3.1";
 
         private readonly Harmony harmony = new Harmony(GUID);
 
