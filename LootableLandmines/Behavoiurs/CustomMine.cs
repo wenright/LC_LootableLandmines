@@ -1,4 +1,5 @@
-﻿using LootableLandmines.Patches;
+﻿using System.Reflection;
+using LootableLandmines.Patches;
 using Unity.Netcode;
 
 namespace LootableLandmines.Behavoiurs;
@@ -31,6 +32,10 @@ internal class CustomMine : PhysicsProp
     public void EarlyGrabItem()
     {
         _landmine.ToggleMineEnabledLocalClient(false);
+        
+        typeof(Landmine)
+            .GetField("localPlayerOnMine", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?.SetValue(_landmine, false);
     }
 
     private void DelayedEnable()

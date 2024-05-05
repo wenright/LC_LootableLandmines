@@ -13,10 +13,8 @@ public class PlayerControllerBPatch
     {
         if (___currentlyGrabbingObject == null) return;
 
-        if (___currentlyGrabbingObject is CustomMine)
-        {
-            CustomMine customMine = (CustomMine) ___currentlyGrabbingObject;
-            customMine.EarlyGrabItem();
-        }
+        if (___currentlyGrabbingObject is not CustomMine customMine) return;
+        
+        customMine.EarlyGrabItem();
     }
 }
